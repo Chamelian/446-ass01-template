@@ -49,16 +49,13 @@ class Vacuum:
 
 
 def vacuumVisualizer(
-    grid: list[list[int]], vacuum: Vacuum, moveCounter: int, slowdown: float = 0.1
+    grid: list[list[int]], vacuum: Vacuum, moveCounter: int, slowdown: float
 ) -> None:
     # https://en.wikipedia.org/wiki/ANSI_escape_code#Control_Sequence_Introducer_commands
     # Used wikipedia for assistance with control codes
     # Resets the cursor to the beginning of the grid
     if moveCounter != 0:
-        print(f"\033[{len(grid) + 1}A\r")
-
-    # Slows down the display so it can be monitored
-    sleep(slowdown)
+        print(f"\033[{len(grid) + 2}A\r")
 
     cleanSquare: str = "+"
     dirtySquare: str = "@"
@@ -72,10 +69,15 @@ def vacuumVisualizer(
             else:
                 print(cleanSquare, end=" ")
         print()
-    print(f"{moveCounter} moves", end="")
+    print(f"{moveCounter} moves")
+
+    # Slows down the display so it can be monitored
+    sleep(slowdown)
 
 
-def vacuumSim(gridSize: int, dirtyWeight: int) -> int:
+def vacuumSim(
+    gridSize: int, dirtyWeight: int, display: bool = True, visualizerSpeed: float = 0.1
+) -> int:
     grid: list[list[int]] = [[0] * gridSize for i in range(gridSize)]
 
     dirtyChoices: list[int] = sample(range((gridSize**2) - 1), dirtyWeight)
@@ -88,21 +90,27 @@ def vacuumSim(gridSize: int, dirtyWeight: int) -> int:
     vacuum: Vacuum = Vacuum(divmod(randint(0, (gridSize**2) - 1), gridSize))
 
     moveCounter: int = 0
+
+    # Display initial state
+    if display:
+        vacuumVisualizer(grid, vacuum, moveCounter, visualizerSpeed)
+
     while dirtyTiles > 0:
-        vacuumVisualizer(grid, vacuum, moveCounter)
         if grid[vacuum.x][vacuum.y] == 1:
             vacuum.suck(grid)
             dirtyTiles -= 1
         else:
             vacuum.move(gridSize)
-
         moveCounter += 1
+
+        if display:
+            vacuumVisualizer(grid, vacuum, moveCounter, visualizerSpeed)
 
     return moveCounter
 
 
 def main() -> None:
-    print(f"\r{vacuumSim(5, 5)} moves")
+    vacuumSim(5, 5)
 
 
 if __name__ == "__main__":
